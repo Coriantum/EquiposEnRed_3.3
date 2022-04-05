@@ -49,7 +49,7 @@ namespace HelloWorld
             {
                 var playerObject = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
                 var player = playerObject.GetComponent<Player>();
-                player.MoveEquipo1();
+                player.SubmitEquipoRequestServerRpc(1);
             }
         }
         static void SubmitNewEquipo2()
@@ -58,7 +58,7 @@ namespace HelloWorld
             {
                 var playerObject = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
                 var player = playerObject.GetComponent<Player>();
-                player.MoveEquipo2();
+                player.SubmitEquipoRequestServerRpc(2);
             }
         }
         static void SubmitNewSinEquipo()
@@ -67,7 +67,7 @@ namespace HelloWorld
             {
                 var playerObject = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject();
                 var player = playerObject.GetComponent<Player>();
-                player.MoveSinEquipo();
+                player.SubmitEquipoRequestServerRpc(0);
             }
         }
 

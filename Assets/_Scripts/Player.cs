@@ -11,9 +11,8 @@ namespace HelloWorld
         
         //Lista de players
         public List<GameObject> players = new List<GameObject>();
-
-
-
+        public List<int> PosEquipo = new List<int>(); // Lista entero que indica el equipo y su cantidad
+        private int numMax = 2;
 
         //Variables
         public NetworkVariable<Vector3> CentralPos = new NetworkVariable<Vector3>();
@@ -26,14 +25,18 @@ namespace HelloWorld
 
         private void Start() {
 
+            PosEquipo.Add(0);
+            PosEquipo.Add(0);
+            PosEquipo.Add(0);
+
+            rend = GetComponent<Renderer>();
+
             CentralPos.OnValueChanged += OnCentralPosChange;
             Equipo1Pos.OnValueChanged += OnEquipo1PosChange;
             Equipo2Pos.OnValueChanged += OnEquipo2PosChange;
+            ColorVariable.OnValueChanged += OnColorChange;
 
-            // Al inicio el jugador reaparecerá en la zona central
-            GetRandomPositionSinEquipo();
-
-
+            
         }
 
 
@@ -46,6 +49,9 @@ namespace HelloWorld
         public void OnEquipo2PosChange(Vector3 previousValue, Vector3 newValue){
             transform.position = Equipo2Pos.Value;
         }
+        public void OnColorChange(Color previousColor, Color newColor){
+            rend.material.color = ColorVariable.Value;
+        }
 
 
 
@@ -53,32 +59,16 @@ namespace HelloWorld
         {
              if (IsOwner)
             {
-                
-               
+                SubmitEquipoRequestServerRpc(-1);
             }
         }
 
 
-        // Metodo encargado de mover al equipo 1 
-        public void MoveEquipo1(){
-            // Mover aleatoriamente en la zona especificada
-            SubmitEquipo1RequestServerRpc();
-            Debug.Log("Paso por MoveEquipo1");
-
-        }
-
-        
-        // Metodo encargado de mover al equipo 2
-        public void MoveEquipo2(){
-            // Mover aleatoriamente en la zona derecha
-            SubmitEquipo2RequestServerRpc();
-
-        }
 
         // Metodo encargado de mover al sin equipo
-        public void MoveSinEquipo(){
+        public void Move(){
             // Mover a la parte central
-            SubmitCentroRequestServerRpc();
+            SubmitEquipoRequestServerRpc(0);
             
         }
 
@@ -98,59 +88,60 @@ namespace HelloWorld
         }
 
 
-        
-
         [ServerRpc]
-        void SubmitCentroRequestServerRpc(ServerRpcParams rpcParams = default)
+        public void SubmitEquipoRequestServerRpc(int numEquipo, ServerRpcParams rpcParams = default)
         {
-            CentralPos.Value = GetRandomPositionSinEquipo();
 
-            // Sin color o color blanco
-            gameObject.GetComponent<Renderer>().material.color = Color.white;
+            // Si el equipo es -1 o 1
+            if(numEquipo == -1){
+                numEquipo = 0;
+            }else if(numEquipo == 0){
+                // Cambio Posicion
+                CentralPos.Value = GetRandomPositionSinEquipo();
+                // Cambio Color
+                Color newColor = Color.blue;
+                ColorVariable.Value = newColor;
 
-            
+                // Añado +1 al equipo 0
+                PosEquipo[0]++;
+            }
 
-        }
-
-        [ServerRpc]
-        void SubmitEquipo1RequestServerRpc(ServerRpcParams rpcParams = default)
-        {
-            Equipo1Pos.Value = GetRandomPositionEquipo1();
-
-            // Dar el color azul
-            gameObject.GetComponent<Renderer>().material.color = Color.blue;
-
-            // Si la lista de player contiene mas de 2 jugadores, no se podrán poner más
-            if(players.Count > 2){
+            // Si el numero de jugadores del equipo 1 es menor que el indicado(2) y numequipo =1.
+            if(numEquipo == 1 && PosEquipo[1] < numMax){
+                Equipo1Pos.Value = GetRandomPositionEquipo1();
+                // Dar el color azul           
+                Color newColor = Color.blue;
+                ColorVariable.Value = newColor;
                 
 
-                // Testeo 
-                Debug.Log("No puedes poner más!!");
-            } else {
-                Debug.Log("Aun puedes poner mas jugadores");
+                // Se añade un jugador y se quita del anterior equipo
+                PosEquipo[1]++;
+            }else{
+
+                Debug.Log("Está lleno " + PosEquipo[1]);
+            }
+            
+            // Si el número de jugadores del equipo 2 es menor que el indicado y el numEquipo = 2
+            if(numEquipo == 2 && PosEquipo[2] < numMax){
+                Equipo2Pos.Value = GetRandomPositionEquipo2();
+                // Dar el color azul           
+                Color newColor = Color.blue;
+                ColorVariable.Value = newColor;
+                
+
+                // Se añade un jugador y se quita del anterior equipo
+                PosEquipo[2]++;
+            }else{
+
+                Debug.Log("Está lleno " + PosEquipo[2]);
             }
         }
 
-        [ServerRpc]
-        void SubmitEquipo2RequestServerRpc(ServerRpcParams rpcParams = default)
-        {
-            Equipo2Pos.Value = GetRandomPositionEquipo2();
-            // Dar el color rojo
-            gameObject.GetComponent<Renderer>().material.color = Color.red;
-
-            // Si la lista de player contiene mas de 2 jugadores, no se podrán poner más
-            if(players.Count > 2){
-
-            } else {
-                Debug.Log("Máximo 2 jugadores");
-            }
-        }
 
 
         void Update()
         {
-           // transform.position = CentralPos.Value;
-           //gameObject.GetComponent<Renderer>().material.color = Color.blue;
+           
         }
     }
 }
